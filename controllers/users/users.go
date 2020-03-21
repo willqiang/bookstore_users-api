@@ -92,6 +92,18 @@ func getUserId(userIdParam string) (int64, *errors.RestErr) {
 	return userId, nil
 }
 
+// GET /internal/users/search?status=active
+/*
+获取status的值（以?开始的参数）和前面几个controller获取user_id的值不同
+user_id 被称为parameter
+status 被称为 query parameter
+*/
 func Search(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "implement me")
+	status := c.Query("status")
+	users, err := services.Search(status)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, users)
 }
