@@ -21,14 +21,14 @@ type Users []User
 
 func (user *User) Marshal(isPublic bool) interface{} {
 	if isPublic {
-		// if between User and PublicUser there have different field json description
+		// if between User and PublicUser there have different field json description (Method 1)
 		return PublicUser{
 			Id:          user.Id,
 			DateCreated: user.DateCreated,
 			Status:      user.Status,
 		}
 	}
-	// if between User and PrivateUser there have exactly field json description
+	// if between User and PrivateUser there have exactly field json description (Method 2)
 	userJson, _ := json.Marshal(user)
 	var privateUser PrivateUser
 	json.Unmarshal(userJson, &privateUser)
