@@ -3,6 +3,7 @@ package users
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/willqiang/bookstore_oauth-go/oauth"
 	"github.com/willqiang/bookstore_users-api/domain/users"
 	"github.com/willqiang/bookstore_users-api/services"
 	"github.com/willqiang/bookstore_users-api/utils/errors"
@@ -29,6 +30,20 @@ func Creat(c *gin.Context) {
 }
 
 func Get(c *gin.Context) {
+	// Authenticate the access token
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	// if we need force every access is a private access (the access token must be authenticated), uncomment follow code
+	/*if oauth.GetCallerId(c.Request) == 0 {
+		err := errors.RestErr{
+			Status: http.StatusUnauthorized,
+			Message: "resource not available",
+		}
+		c.JSON(err.Status, err)
+		return
+	}*/
 	userId, idErr := getUserId(c.Param("user_id"))
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
@@ -40,7 +55,11 @@ func Get(c *gin.Context) {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
-	c.JSON(http.StatusOK, user.Marshal(c.GetHeader("X-Public") == "true"))
+	if oauth.GetCallerId(c.Request) == user.Id {
+		c.JSON(http.StatusOK, user.Marshal(false))
+		return
+	}
+	c.JSON(http.StatusOK, user.Marshal(oauth.IsPublic(c.Request)))
 }
 
 func Update(c *gin.Context) {
